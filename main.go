@@ -3,21 +3,24 @@ package main
 import (
 	"bufio"
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"log"
 	"net"
 	"os"
+	"runtime"
 	"strings"
+	"sync"
 	"time"
 )
 
-var appVersion = "Test Version"
+var AppVersion = "Test Version"
 
 func main() {
-	fmt.Printf("k8s-test %s started \r\n", appVersion)
+	fmt.Printf("k8s-test %s started \r\n", AppVersion)
 
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: tester <mode> (cpu | inet)")
+		fmt.Println("Usage: k8s-test <mode> (cpu | inet)")
 		return
 	}
 
@@ -36,20 +39,44 @@ func main() {
 func cpuLoad() {
 	fmt.Println("Starting CPU intensive task...")
 
+	// Установим конечное время выполнения задачи
 	endTime := time.Now().Add(5 * time.Minute)
-	for time.Now().Before(endTime) {
-		findPrime()
+
+	// Получаем количество доступных ядер
+	numCPU := runtime.NumCPU()
+	runtime.GOMAXPROCS(numCPU)
+
+	// Запускаем воркеры в отдельной горутине для каждого ядра
+	var wg sync.WaitGroup
+	for i := 0; i < numCPU; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for time.Now().Before(endTime) {
+				hashRandomData()
+			}
+		}()
 	}
 
+	// Ожидаем завершения всех горутин
+	wg.Wait()
 	fmt.Println("CPU intensive task finished.")
 }
 
-// Ресурсоемкая задача для нагрузки на CPU (поиск простых чисел)
-func findPrime() {
-	_, err := rand.Prime(rand.Reader, 1024)
+// Функция для генерации и хеширования случайных данных
+func hashRandomData() {
+	// Создаем случайный массив данных
+	data := make([]byte, 1024)
+	_, err := rand.Read(data)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Вычисляем SHA-256 хеш
+	hash := sha256.Sum256(data)
+
+	// Выводим результат (опционально, для предотвращения оптимизаций)
+	_ = hash[0]
 }
 
 func checkConnections() {
