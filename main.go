@@ -11,9 +11,13 @@ import (
 	"time"
 )
 
+var appVersion = "Test Version"
+
 func main() {
+	fmt.Printf("k8s-test %s started \r\n", appVersion)
+
 	if len(os.Args) < 2 {
-		fmt.Println("Usage: app <mode> (cpu | inet)")
+		fmt.Println("Usage: tester <mode> (cpu | inet)")
 		return
 	}
 
