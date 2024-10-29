@@ -11,6 +11,6 @@ While the application accepts two parameters "cpu" and "inet"
 > cat inet.cfg
 example.com:443
 192.168.1.100:80
-```shell
+```
 
 For example, you can add a list of known mining pool addresses to inet.cfg.
